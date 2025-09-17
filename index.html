@@ -1,223 +1,273 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Enhanced Forex Intra-Day Cluster Forecast - Standalone</title>
+    <title>Enhanced Forex Cluster Analysis - Pure Price Action</title>
+    <meta name="description" content="Advanced Forex cluster analysis with dynamic clustering, exponential weighting, session analysis, and candlestick pattern recognition">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'Courier New', monospace; 
-            background: #0d1117; 
-            color: #e6edf3; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: #e2e8f0; 
             padding: 10px;
-            font-size: 12px;
+            font-size: 13px;
+            min-height: 100vh;
         }
         .container { max-width: 1800px; margin: 0 auto; }
         .header {
-            background: #161b22;
-            border: 1px solid #30363d;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            padding: 25px;
+            margin-bottom: 25px;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
         }
         .controls {
-            background: #0d1117;
-            border: 1px solid #21262d;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 25px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
         .settings-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 18px;
+        }
+        .settings-group h3 {
+            color: #22c55e;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 2px solid #22c55e;
+            padding-bottom: 8px;
         }
         input, button, select { 
-            margin: 5px; 
-            padding: 8px 12px;
-            background: #21262d;
-            color: #e6edf3;
-            border: 1px solid #30363d;
+            margin: 5px 0; 
+            padding: 12px 16px;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #475569;
             font-family: inherit;
-            font-size: 12px;
-            border-radius: 4px;
+            font-size: 13px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
         }
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #f0f6fc;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #f1f5f9;
         }
         button {
-            background: #238636;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
         }
-        button:hover { background: #2ea043; }
-        button:disabled { background: #21262d; color: #656d76; cursor: not-allowed; }
+        button:hover { 
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        button:disabled { 
+            background: #374151; 
+            color: #6b7280; 
+            cursor: not-allowed; 
+            transform: none;
+            box-shadow: none;
+        }
         .upload-area {
-            background: #0d1117;
-            border: 2px dashed #30363d;
-            padding: 30px;
+            background: #0f172a;
+            border: 2px dashed #475569;
+            padding: 40px;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .upload-area:hover { border-color: #238636; }
+        .upload-area:hover { 
+            border-color: #22c55e; 
+            background: rgba(34, 197, 94, 0.05);
+        }
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            background: #0d1117;
-            margin-bottom: 20px;
-            font-size: 11px;
-            border-radius: 8px;
+            background: #1e293b;
+            margin-bottom: 25px;
+            font-size: 12px;
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
         th, td { 
-            border: 1px solid #21262d; 
-            padding: 8px 12px; 
+            border: 1px solid #334155; 
+            padding: 12px 16px; 
             text-align: left;
         }
         th { 
-            background: #21262d; 
-            font-weight: bold;
-            color: #f0f6fc;
+            background: linear-gradient(135deg, #334155, #475569); 
+            font-weight: 600;
+            color: #f1f5f9;
+            position: sticky;
+            top: 0;
         }
-        tbody tr:hover { background: #161b22; }
-        .top-cluster { background: #1a2332; font-weight: bold; }
-        .bullish { color: #3fb950; }
-        .bearish { color: #f85149; }
-        .neutral { color: #f0cc72; }
-        .warning { color: #ff9500; }
+        tbody tr:hover { background: rgba(34, 197, 94, 0.1); }
+        .top-cluster { 
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); 
+            font-weight: 600; 
+            border-left: 4px solid #22c55e;
+        }
+        .bullish { color: #22c55e; font-weight: 600; }
+        .bearish { color: #ef4444; font-weight: 600; }
+        .neutral { color: #eab308; font-weight: 600; }
         .section {
-            background: #0d1117;
-            border: 1px solid #21262d;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
         .forecast-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 25px;
+            margin-bottom: 25px;
         }
         .forecast-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            padding: 20px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .forecast-card h3 {
+            color: #22c55e;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #22c55e;
+            padding-bottom: 10px;
         }
         .big-number {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 2.5rem;
+            font-weight: 700;
             text-align: center;
-            margin: 15px 0;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .data-row {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
-            padding: 4px 0;
-            border-bottom: 1px solid #21262d;
+            margin: 12px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
         }
+        .data-row:last-child { border-bottom: none; }
         .trade-suggestion {
-            background: #1a2332;
-            border: 1px solid #30363d;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            border-left: 4px solid #238636;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+            border: 1px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border-left: 4px solid #22c55e;
+        }
+        .no-trade {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05));
+            border: 1px solid #eab308;
+            border-left: 4px solid #eab308;
         }
         .status { 
-            margin-top: 15px; 
-            padding: 10px;
-            background: #21262d;
-            border-radius: 4px;
-        }
-        .success { color: #3fb950; }
-        .error { color: #f85149; }
-        .loading { color: #f0cc72; }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .checkbox-group input[type="checkbox"] {
-            margin: 0;
-            transform: scale(1.2);
-        }
-        .backtest-section {
-            background: #161b22;
-            border: 1px solid #30363d;
-            padding: 20px;
-            margin-bottom: 20px;
+            margin-top: 20px; 
+            padding: 16px;
+            background: #0f172a;
             border-radius: 8px;
+            border-left: 4px solid #22c55e;
         }
-        .confidence-badge {
-            display: inline-block;
-            padding: 2px 8px;
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .loading { color: #eab308; }
+        .position-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 2px solid #22c55e;
+            padding: 25px;
             border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
         }
-        .confidence-high { background: #238636; color: white; }
-        .confidence-medium { background: #f0cc72; color: black; }
-        .confidence-low { background: #f85149; color: white; }
-        .flag-icons {
-            display: flex;
-            gap: 4px;
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
-        .flag-icon {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            font-size: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        .badge-success { background: #22c55e; color: #000; }
+        .badge-warning { background: #eab308; color: #000; }
+        .badge-danger { background: #ef4444; color: #fff; }
+        .enhanced-features {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border: 1px solid #334155;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
         }
-        .flag-trend { background: #3fb950; color: black; }
-        .flag-volatility { background: #f0cc72; color: black; }
-        .flag-high-conf { background: #ff9500; color: black; }
-        .metrics-grid {
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
-        .metric-card {
-            background: #21262d;
-            padding: 15px;
+        .feature-item {
+            background: rgba(34, 197, 94, 0.05);
+            padding: 20px;
             border-radius: 8px;
-            text-align: center;
-            border: 1px solid #30363d;
+            border-left: 3px solid #22c55e;
         }
-        .metric-value {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .feature-item h4 {
+            color: #22c55e;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
-        .metric-label {
-            font-size: 10px;
-            color: #656d76;
+        @media (max-width: 768px) {
+            .controls { grid-template-columns: 1fr; }
+            .forecast-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>ENHANCED FOREX INTRA-DAY CLUSTER FORECAST</h1>
-        <p>Advanced Algorithmic Analysis with ATR, Recency Weighting & Backtesting</p>
+        <h1>ENHANCED FOREX CLUSTER ANALYSIS</h1>
+        <p>Advanced Pure Price Action • Dynamic Clustering • Pattern Recognition</p>
     </div>
 
     <div class="controls">
         <div>
-            <h3>Core Analysis Settings</h3>
+            <h3>Market Settings</h3>
             <div class="settings-group">
                 <div>
                     <label for="forexPair">Forex Pair:</label>
@@ -226,24 +276,26 @@
                 <div>
                     <label for="candleSize">Timeframe:</label>
                     <select id="candleSize">
+                        <option value="5m">5 Minutes</option>
                         <option value="15m">15 Minutes</option>
                         <option value="30m" selected>30 Minutes</option>
                         <option value="1h">1 Hour</option>
+                        <option value="4h">4 Hours</option>
                     </select>
                 </div>
                 <div>
-                    <label for="clusterSizePips">Base Cluster Size (Pips):</label>
-                    <input type="number" id="clusterSizePips" value="5" min="1"/>
+                    <label for="basePips">Base Cluster Size (Pips):</label>
+                    <input type="number" id="basePips" value="5" min="1"/>
                 </div>
                 <div>
                     <label for="lookbackDays">Lookback Days:</label>
-                    <input type="number" id="lookbackDays" value="3" min="1" max="10"/>
+                    <input type="number" id="lookbackDays" value="3" min="1" max="30"/>
                 </div>
             </div>
         </div>
-
+        
         <div>
-            <h3>Session & Risk Settings</h3>
+            <h3>Session & Risk</h3>
             <div class="settings-group">
                 <div>
                     <label for="sessionStart">Session Start:</label>
@@ -254,152 +306,145 @@
                     <input type="time" id="sessionEnd" value="16:00"/>
                 </div>
                 <div>
-                    <label for="timezone">Timezone:</label>
-                    <select id="timezone">
-                        <option value="EST">EST</option>
-                        <option value="GMT">GMT</option>
-                        <option value="CET">CET</option>
-                        <option value="JST">JST</option>
-                    </select>
+                    <label for="accountBalance">Account Balance ($):</label>
+                    <input type="number" id="accountBalance" value="10000" min="1000"/>
                 </div>
                 <div>
-                    <label for="confidenceThreshold">Min Confidence (%):</label>
-                    <input type="number" id="confidenceThreshold" value="60" min="10" max="95"/>
-                </div>
-                <div>
-                    <label for="recencyWeight">Recency Weight:</label>
-                    <input type="number" id="recencyWeight" value="2.0" step="0.1" min="1.0" max="5.0"/>
-                </div>
-                <div>
-                    <label for="atrPeriod">ATR Period:</label>
-                    <input type="number" id="atrPeriod" value="14" min="5" max="30"/>
+                    <label for="riskPercentage">Risk per Trade (%):</label>
+                    <input type="number" id="riskPercentage" value="2" min="0.5" max="10" step="0.5"/>
                 </div>
             </div>
         </div>
         
         <div>
-            <h3>Data Upload & Options</h3>
+            <h3>Advanced Settings</h3>
+            <div class="settings-group">
+                <div>
+                    <label for="minRiskReward">Min Risk:Reward:</label>
+                    <input type="number" id="minRiskReward" value="2.0" min="1" max="5" step="0.1"/>
+                </div>
+                <div>
+                    <label for="minConfidence">Min Confidence (%):</label>
+                    <input type="number" id="minConfidence" value="60" min="30" max="90"/>
+                </div>
+                <div>
+                    <label for="volatilityLookback">Volatility Lookback:</label>
+                    <input type="number" id="volatilityLookback" value="20" min="5" max="100"/>
+                </div>
+                <div>
+                    <label for="exponentialDecay">Exponential Decay:</label>
+                    <input type="number" id="exponentialDecay" value="0.1" min="0.01" max="1" step="0.01"/>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h3>Data Upload</h3>
             <div class="upload-area" onclick="document.getElementById('csvFile').click()">
-                <p><strong>📊 Upload CSV Data</strong></p>
-                <p style="color: #656d76; font-size: 11px; margin-top: 10px;">
-                    Auto-detects comma/tab delimited<br/>
-                    Required: Date, Open, High, Low, Close
+                <p><strong>📊 Click to Upload CSV File</strong></p>
+                <p style="color: #94a3b8; font-size: 12px; margin-top: 12px;">
+                    Required: Date, Open, High, Low, Close<br>
+                    Optional: Volume
                 </p>
             </div>
             <input type="file" id="csvFile" accept=".csv" style="display: none;"/>
             
-            <div style="margin-top: 15px;">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="useATRClustering" checked/>
-                    <label for="useATRClustering" style="margin: 0;">Dynamic ATR Clustering</label>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="excludeOutliers" checked/>
-                    <label for="excludeOutliers" style="margin: 0;">Exclude Outliers</label>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="trendAlignment"/>
-                    <label for="trendAlignment" style="margin: 0;">Trend Alignment Check</label>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="backtestMode"/>
-                    <label for="backtestMode" style="margin: 0;">Backtest Mode</label>
-                </div>
-            </div>
-
-            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button onclick="analyzeData()" id="analyzeBtn" disabled>ANALYZE</button>
-                <button onclick="runBacktest()" id="backtestBtn" disabled>BACKTEST</button>
-                <button onclick="exportResults()" id="exportBtn" disabled>EXPORT</button>
-                <button onclick="resetAnalysis()" id="resetBtn">RESET</button>
+            <div style="margin-top: 20px;">
+                <button onclick="analyzeData()" id="analyzeBtn" disabled>🚀 ANALYZE CLUSTERS</button>
+                <button onclick="downloadCSV()" id="exportBtn" disabled>📥 EXPORT DATA</button>
             </div>
         </div>
     </div>
 
     <div id="status" class="status">Upload CSV data to begin enhanced analysis...</div>
 
-    <!-- Performance Metrics -->
-    <div id="metricsSection" style="display: none;">
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-value bullish" id="totalClusters">0</div>
-                <div class="metric-label">CLUSTERS FOUND</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value neutral" id="avgConfidence">0%</div>
-                <div class="metric-label">AVG CONFIDENCE</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value bearish" id="topClusterHits">0</div>
-                <div class="metric-label">TOP CLUSTER HITS</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value warning" id="backtestWinRate">0%</div>
-                <div class="metric-label">BACKTEST WIN RATE</div>
-            </div>
-        </div>
-    </div>
-
     <div class="forecast-grid" id="forecastSection" style="display: none;">
         <div class="forecast-card">
-            <h3>🎯 TRADING FORECAST</h3>
+            <h3>🎯 TRADING SIGNAL</h3>
             <div id="tradingForecast">No analysis yet...</div>
         </div>
         <div class="forecast-card">
-            <h3>📊 CLUSTER SUMMARY</h3>
+            <h3>📈 CLUSTER SUMMARY</h3>
             <div id="clusterSummary">No analysis yet...</div>
         </div>
-        <div class="forecast-card">
-            <h3>⚡ RISK ANALYSIS</h3>
-            <div id="riskAnalysis">No analysis yet...</div>
+        <div class="position-card">
+            <h3>💰 POSITION SIZING</h3>
+            <div id="positionSizing">No analysis yet...</div>
         </div>
-    </div>
-
-    <!-- Backtest Results -->
-    <div class="backtest-section" id="backtestSection" style="display: none;">
-        <h3>🔙 BACKTEST RESULTS</h3>
-        <div id="backtestResults">Run backtest to see results...</div>
     </div>
 
     <div class="section" id="clustersSection" style="display: none;">
-        <h3>🧠 ENHANCED CLUSTER ANALYSIS</h3>
+        <h3>📊 ENHANCED CLUSTER ANALYSIS</h3>
         <div id="clustersTable">No data analyzed yet...</div>
+    </div>
+
+    <div class="enhanced-features">
+        <h3 style="color: #22c55e; font-size: 1.5rem; margin-bottom: 20px;">🚀 Enhanced Features</h3>
+        <div class="features-grid">
+            <div class="feature-item">
+                <h4>Dynamic Clustering</h4>
+                <p>Cluster size automatically adjusts based on recent market volatility using ATR-like calculations for optimal precision.</p>
+            </div>
+            <div class="feature-item">
+                <h4>Exponential Weighting</h4>
+                <p>Recent candles weighted more heavily in confidence scoring with configurable decay factor for recency bias.</p>
+            </div>
+            <div class="feature-item">
+                <h4>Session Analysis</h4>
+                <p>Multi-session data tracking with session diversity bonuses for stronger, cross-session validated signals.</p>
+            </div>
+            <div class="feature-item">
+                <h4>Pattern Recognition</h4>
+                <p>Candlestick microstructure analysis including pin bars, engulfing patterns, inside bars, and doji detection.</p>
+            </div>
+            <div class="feature-item">
+                <h4>Smart Risk Management</h4>
+                <p>Volatility-adjusted stop losses with minimum risk:reward ratios and intelligent position sizing calculations.</p>
+            </div>
+            <div class="feature-item">
+                <h4>Trend Bias Integration</h4>
+                <p>Optional short-term trend alignment using median price calculations without traditional indicators.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
 let csvData = [];
 let analysis = [];
-let backtestResults = null;
 let settings = {
     forexPair: 'EURUSD',
     candleSize: '30m',
-    clusterSizePips: 5,
+    basePips: 5,
     lookbackDays: 3,
     sessionStart: '12:00',
     sessionEnd: '16:00',
-    timezone: 'EST',
-    confidenceThreshold: 60,
-    recencyWeight: 2.0,
-    atrPeriod: 14,
-    useATRClustering: true,
-    excludeOutliers: true,
-    trendAlignment: false,
-    backtestMode: false,
-    pipValue: 0.0001
+    accountBalance: 10000,
+    riskPercentage: 2,
+    pipValue: 0.0001,
+    minRiskReward: 2.0,
+    volatilityLookback: 20,
+    exponentialDecay: 0.1,
+    minConfidence: 60
 };
 
-// Event Listeners
-document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+document.getElementById('csvFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+        parseCSV(evt.target.result);
+    };
+    reader.readAsText(file);
+});
 
 // Update settings when form changes
-['forexPair', 'candleSize', 'clusterSizePips', 'lookbackDays', 'sessionStart', 'sessionEnd', 
- 'timezone', 'confidenceThreshold', 'recencyWeight', 'atrPeriod'].forEach(id => {
+['forexPair', 'candleSize', 'basePips', 'lookbackDays', 'sessionStart', 'sessionEnd', 'accountBalance', 'riskPercentage', 'minRiskReward', 'volatilityLookback', 'exponentialDecay', 'minConfidence'].forEach(id => {
     document.getElementById(id).addEventListener('change', e => {
         let value = e.target.value;
-        if (['clusterSizePips', 'lookbackDays', 'confidenceThreshold', 'atrPeriod'].includes(id)) {
+        if (['basePips', 'lookbackDays', 'accountBalance', 'volatilityLookback', 'minConfidence'].includes(id)) {
             value = parseInt(value) || settings[id];
-        } else if (['recencyWeight'].includes(id)) {
+        } else if (['riskPercentage', 'minRiskReward', 'exponentialDecay'].includes(id)) {
             value = parseFloat(value) || settings[id];
         }
         settings[id] = value;
@@ -410,55 +455,34 @@ document.getElementById('csvFile').addEventListener('change', handleFileUpload);
     });
 });
 
-// Checkbox event listeners
-['useATRClustering', 'excludeOutliers', 'trendAlignment', 'backtestMode'].forEach(id => {
-    document.getElementById(id).addEventListener('change', e => {
-        settings[id] = e.target.checked;
-    });
-});
-
 function detectPipValue(pair) {
     const jpyPairs = ['USDJPY', 'EURJPY', 'GBPJPY', 'AUDJPY', 'NZDJPY', 'CADJPY', 'CHFJPY'];
     return jpyPairs.includes(pair.toUpperCase()) ? 0.01 : 0.0001;
-}
-
-function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = evt => {
-        parseCSV(evt.target.result);
-    };
-    reader.readAsText(file);
 }
 
 function parseCSV(csvText) {
     try {
         const lines = csvText.trim().split('\n');
         
-        // Auto-detect delimiter (comma vs tab)
+        // Auto-detect delimiter
         const firstLine = lines[0];
         const delimiter = firstLine.includes('\t') ? '\t' : ',';
         
         const headers = firstLine.toLowerCase().split(delimiter).map(h => h.trim());
         
-        // Find required columns with flexible matching
         const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('time'));
         const openIdx = headers.findIndex(h => h.includes('open'));
         const highIdx = headers.findIndex(h => h.includes('high'));
         const lowIdx = headers.findIndex(h => h.includes('low'));
         const closeIdx = headers.findIndex(h => h.includes('close'));
-        const changePipsIdx = headers.findIndex(h => h.includes('change') && h.includes('pips'));
-        const changePercentIdx = headers.findIndex(h => h.includes('change') && (h.includes('%') || h.includes('percent')));
+        const volumeIdx = headers.findIndex(h => h.includes('volume'));
 
         if ([dateIdx, openIdx, highIdx, lowIdx, closeIdx].some(i => i === -1)) {
-            throw new Error('Required OHLC columns not found. Expected: Date, Open, High, Low, Close');
+            throw new Error('Required OHLC columns not found');
         }
 
         csvData = [];
         let skippedRows = 0;
-        let invalidCandles = 0;
 
         for (let i = 1; i < lines.length; i++) {
             const vals = lines[i].split(delimiter).map(v => v.trim());
@@ -467,43 +491,25 @@ function parseCSV(csvText) {
                 continue;
             }
 
-            // Validate and parse date
             const dateObj = new Date(vals[dateIdx]);
             if (isNaN(dateObj.getTime())) {
                 skippedRows++;
                 continue;
             }
 
-            // Validate and parse OHLC values
             const open = parseFloat(vals[openIdx]);
             const high = parseFloat(vals[highIdx]);
             const low = parseFloat(vals[lowIdx]);
             const close = parseFloat(vals[closeIdx]);
+            const volume = volumeIdx !== -1 ? parseFloat(vals[volumeIdx]) : undefined;
 
-            // Validate OHLC integrity
-            if ([open, high, low, close].some(isNaN) || 
-                high < Math.max(open, close) || 
-                low > Math.min(open, close) || 
-                open <= 0) {
-                invalidCandles++;
+            if ([open, high, low, close].some(isNaN) || high < low || open <= 0) {
+                skippedRows++;
                 continue;
             }
 
-            // Calculate or parse pip changes
-            let changePips = 0;
-            if (changePipsIdx !== -1 && vals[changePipsIdx]) {
-                changePips = parseFloat(vals[changePipsIdx].replace(/[^\d.-]/g, '') || '0');
-            } else if (csvData.length > 0) {
-                changePips = (close - csvData[csvData.length - 1].close) / settings.pipValue;
-            }
-
-            // Calculate or parse percentage changes
-            let changePercent = 0;
-            if (changePercentIdx !== -1 && vals[changePercentIdx]) {
-                changePercent = parseFloat(vals[changePercentIdx].replace(/[^\d.-]/g, '') || '0');
-            } else {
-                changePercent = ((close - open) / open) * 100;
-            }
+            // Calculate percentage change
+            const changePercent = ((close - open) / open) * 100;
 
             csvData.push({
                 date: vals[dateIdx],
@@ -512,44 +518,18 @@ function parseCSV(csvText) {
                 high,
                 low,
                 close,
-                changePips,
                 changePercent,
                 dailyAvg: (open + high + low + close) / 4,
-                atr: 0 // Will be calculated later
+                volume
             });
         }
 
-        // Ensure chronological order
         csvData.sort((a, b) => a.dateObj - b.dateObj);
         
-        // Validate candle size consistency
-        if (csvData.length > 1) {
-            const timeDiffs = [];
-            for (let i = 1; i < Math.min(csvData.length, 20); i++) {
-                timeDiffs.push(csvData[i].dateObj - csvData[i-1].dateObj);
-            }
-            const avgTimeDiff = timeDiffs.reduce((a, b) => a + b, 0) / timeDiffs.length;
-            const expectedInterval = settings.candleSize === '15m' ? 15 * 60 * 1000 : 
-                                   settings.candleSize === '30m' ? 30 * 60 * 1000 : 60 * 60 * 1000;
-            
-            if (Math.abs(avgTimeDiff - expectedInterval) > expectedInterval * 0.1) {
-                console.warn('Candle interval mismatch detected');
-            }
-        }
-
-        // Calculate ATR for each candle
-        calculateATR();
-
         document.getElementById('analyzeBtn').disabled = false;
-        document.getElementById('backtestBtn').disabled = false;
+        document.getElementById('status').innerHTML = `<span class="success">✅ Loaded ${csvData.length} candles${skippedRows > 0 ? `, skipped ${skippedRows} invalid rows` : ''}</span>`;
         
-        let statusMsg = `<span class="success">✓ Loaded ${csvData.length} valid candles</span>`;
-        if (skippedRows > 0) statusMsg += ` | Skipped ${skippedRows} rows`;
-        if (invalidCandles > 0) statusMsg += ` | ${invalidCandles} invalid candles`;
-        
-        document.getElementById('status').innerHTML = statusMsg;
-        
-        // Auto-detect pair based on price levels
+        // Auto-detect pair
         if (csvData.length > 0) {
             const avgPrice = csvData.reduce((sum, c) => sum + c.close, 0) / csvData.length;
             if (avgPrice > 100) {
@@ -560,33 +540,7 @@ function parseCSV(csvText) {
         }
         
     } catch (error) {
-        document.getElementById('status').innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
-    }
-}
-
-function calculateATR() {
-    const period = settings.atrPeriod;
-    
-    for (let i = 0; i < csvData.length; i++) {
-        if (i < period) {
-            csvData[i].atr = 0;
-            continue;
-        }
-        
-        let atrSum = 0;
-        for (let j = i - period + 1; j <= i; j++) {
-            const current = csvData[j];
-            const previous = j > 0 ? csvData[j - 1] : current;
-            
-            const tr = Math.max(
-                current.high - current.low,
-                Math.abs(current.high - previous.close),
-                Math.abs(current.low - previous.close)
-            );
-            atrSum += tr;
-        }
-        
-        csvData[i].atr = atrSum / period;
+        document.getElementById('status').innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
     }
 }
 
@@ -597,17 +551,16 @@ function filterSessionData(data) {
     return data.filter(candle => {
         if (candle.dateObj < cutoffDate) return false;
 
-        // Enhanced time filtering with minutes precision
         const hour = candle.dateObj.getHours();
         const minute = candle.dateObj.getMinutes();
-        const timeMinutes = hour * 60 + minute;
+        const timeValue = hour * 60 + minute;
         
         const [startHour, startMinute] = settings.sessionStart.split(':').map(Number);
         const [endHour, endMinute] = settings.sessionEnd.split(':').map(Number);
-        const sessionStartMinutes = startHour * 60 + startMinute;
-        const sessionEndMinutes = endHour * 60 + endMinute;
+        const sessionStartValue = startHour * 60 + startMinute;
+        const sessionEndValue = endHour * 60 + endMinute;
 
-        return timeMinutes >= sessionStartMinutes && timeMinutes < sessionEndMinutes;
+        return timeValue >= sessionStartValue && timeValue < sessionEndValue;
     });
 }
 
@@ -622,171 +575,244 @@ function percentile(arr, p) {
     return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
+// Calculate dynamic cluster size based on volatility
+function calculateDynamicClusterSize(data) {
+    const recentData = data.slice(-settings.volatilityLookback);
+    if (recentData.length === 0) return settings.basePips * settings.pipValue;
+
+    let totalRange = 0;
+    for (let i = 1; i < recentData.length; i++) {
+        const current = recentData[i];
+        const previous = recentData[i - 1];
+        
+        const range1 = current.high - current.low;
+        const range2 = Math.abs(current.high - previous.close);
+        const range3 = Math.abs(current.low - previous.close);
+        
+        totalRange += Math.max(range1, range2, range3);
+    }
+
+    const avgTrueRange = totalRange / (recentData.length - 1);
+    const dynamicPips = Math.max(
+        settings.basePips * 0.5,
+        Math.min(settings.basePips * 3, avgTrueRange / settings.pipValue)
+    );
+
+    return dynamicPips * settings.pipValue;
+}
+
+// Apply exponential decay weighting
+function calculateExponentialWeight(index, totalLength) {
+    const position = (totalLength - 1 - index) / (totalLength - 1);
+    return Math.exp(-settings.exponentialDecay * position);
+}
+
+// Detect candlestick patterns
+function detectCandlestickPatterns(candles, index) {
+    const patterns = [];
+    const current = candles[index];
+    const previous = index > 0 ? candles[index - 1] : null;
+
+    if (!current || !previous) return patterns;
+
+    const body = Math.abs(current.close - current.open);
+    const upperShadow = current.high - Math.max(current.open, current.close);
+    const lowerShadow = Math.min(current.open, current.close) - current.low;
+    const totalRange = current.high - current.low;
+
+    // Pin Bar detection
+    const shadowRatio = Math.max(upperShadow, lowerShadow) / totalRange;
+    if (shadowRatio > 0.6 && body / totalRange < 0.3) {
+        patterns.push({
+            type: 'pinBar',
+            strength: shadowRatio,
+            bullish: lowerShadow > upperShadow
+        });
+    }
+
+    // Engulfing pattern
+    const prevBody = Math.abs(previous.close - previous.open);
+    if (body > prevBody * 1.5) {
+        const bullishEngulfing = current.close > current.open && 
+                              previous.close < previous.open && 
+                              current.close > previous.open &&
+                              current.open < previous.close;
+                              
+        const bearishEngulfing = current.close < current.open && 
+                              previous.close > previous.open && 
+                              current.close < previous.open &&
+                              current.open > previous.close;
+
+        if (bullishEngulfing || bearishEngulfing) {
+            patterns.push({
+                type: 'engulfing',
+                strength: body / prevBody,
+                bullish: bullishEngulfing
+            });
+        }
+    }
+
+    // Inside Bar
+    if (current.high <= previous.high && current.low >= previous.low) {
+        patterns.push({
+            type: 'insideBar',
+            strength: 1 - (totalRange / (previous.high - previous.low)),
+            bullish: current.close > current.open
+        });
+    }
+
+    // Doji
+    if (body / totalRange < 0.1 && totalRange > 0) {
+        patterns.push({
+            type: 'doji',
+            strength: 1 - (body / totalRange),
+            bullish: current.close > current.open
+        });
+    }
+
+    return patterns;
+}
+
 function analyzeData() {
     if (csvData.length === 0) return;
 
-    document.getElementById('status').innerHTML = '<span class="loading">⏳ Running enhanced analysis...</span>';
+    document.getElementById('status').innerHTML = '<span class="loading">⏳ Running enhanced cluster analysis...</span>';
     document.getElementById('analyzeBtn').disabled = true;
 
     setTimeout(() => {
-        try {
-            const sessionData = filterSessionData(csvData);
-            
-            if (sessionData.length === 0) {
-                throw new Error('No data found for selected session and lookback period');
-            }
-
-            // Dynamic cluster sizing based on ATR
-            let dynamicClusterSize = settings.clusterSizePips * settings.pipValue;
-            if (settings.useATRClustering && sessionData.length > 0) {
-                const recentATR = sessionData.slice(-Math.min(20, sessionData.length))
-                    .reduce((sum, c) => sum + (c.atr || 0), 0) / Math.min(20, sessionData.length);
-                
-                if (recentATR > 0) {
-                    dynamicClusterSize = Math.max(
-                        recentATR * 0.6, // ATR-based sizing
-                        settings.clusterSizePips * settings.pipValue * 0.5 // Minimum threshold
-                    );
-                }
-            }
-
-            // Outlier removal if enabled
-            let filteredData = sessionData;
-            if (settings.excludeOutliers) {
-                const priceChanges = sessionData.map(c => Math.abs(c.changePercent));
-                const q3 = percentile(priceChanges, 0.75);
-                const q1 = percentile(priceChanges, 0.25);
-                const iqr = q3 - q1;
-                const outlierThreshold = q3 + 1.5 * iqr;
-                
-                filteredData = sessionData.filter(c => Math.abs(c.changePercent) <= outlierThreshold);
-            }
-
-            // Build clusters with enhanced statistics
-            const clusters = {};
-            const totalDataPoints = filteredData.length;
-            const currentPrice = filteredData[filteredData.length - 1].close;
-
-            filteredData.forEach((candle, index) => {
-                const cluster = Math.round(candle.dailyAvg / dynamicClusterSize) * dynamicClusterSize;
-                const clusterKey = cluster.toFixed(8);
-
-                if (!clusters[clusterKey]) {
-                    clusters[clusterKey] = {
-                        cluster,
-                        count: 0,
-                        up: 0,
-                        down: 0,
-                        volumes: [],
-                        changePercents: [],
-                        highs: [],
-                        lows: [],
-                        closes: [],
-                        history: [],
-                        recentHits: 0,
-                        weightedScore: 0
-                    };
-                }
-
-                const clusterData = clusters[clusterKey];
-                clusterData.count++;
-                clusterData.history.push(candle);
-                clusterData.volumes.push(Math.abs(candle.changePercent));
-                clusterData.changePercents.push(candle.changePercent);
-                clusterData.highs.push(candle.high);
-                clusterData.lows.push(candle.low);
-                clusterData.closes.push(candle.close);
-
-                if (candle.close > candle.open) clusterData.up++;
-                else clusterData.down++;
-
-                // Recency weighting: more recent data gets higher weight
-                const recencyFactor = Math.pow(settings.recencyWeight, (totalDataPoints - index) / totalDataPoints);
-                clusterData.weightedScore += recencyFactor;
-
-                // Count recent hits (last 1/3 of data)
-                if (index >= totalDataPoints * 0.67) {
-                    clusterData.recentHits++;
-                }
-            });
-
-            // Calculate enhanced statistics
-            analysis = Object.values(clusters).map(cluster => {
-                cluster.upPct = (cluster.up / cluster.count) * 100;
-                cluster.avgChangePercent = cluster.changePercents.reduce((a, b) => a + b, 0) / cluster.count;
-                cluster.probableHigh = percentile(cluster.highs, 0.75);
-                cluster.probableLow = percentile(cluster.lows, 0.25);
-                cluster.median = percentile(cluster.closes, 0.5);
-                cluster.volatility = Math.sqrt(cluster.changePercents.reduce((sum, x) => sum + Math.pow(x, 2), 0) / cluster.count);
-
-                // Enhanced confidence calculation
-                const frequencyFactor = Math.min(cluster.count / totalDataPoints * 100, 40);
-                const consistencyFactor = Math.abs(cluster.upPct - 50) * 0.8;
-                const recencyFactor = (cluster.recentHits / Math.max(totalDataPoints * 0.33, 1)) * 30;
-                const volatilityFactor = Math.min(cluster.volatility * 5, 20);
-                
-                cluster.confidence = Math.min(95, Math.max(5, 
-                    frequencyFactor + consistencyFactor + recencyFactor + volatilityFactor
-                ));
-
-                // Risk/Reward calculation with volatility adjustment
-                const stopDistance = cluster.volatility * settings.pipValue * 20; // Dynamic stop based on volatility
-                const targetDistance = Math.abs(cluster.median - currentPrice);
-                cluster.riskReward = targetDistance / Math.max(stopDistance, settings.pipValue * 5);
-
-                // Trend alignment check
-                if (settings.trendAlignment) {
-                    const recentTrend = cluster.history.slice(-Math.min(5, cluster.history.length))
-                        .reduce((sum, c) => sum + (c.close - c.open), 0);
-                    cluster.trendAligned = (recentTrend > 0 && cluster.upPct > 50) || 
-                                        (recentTrend < 0 && cluster.upPct < 50);
-                } else {
-                    cluster.trendAligned = false;
-                }
-
-                // Hit rate calculation (simplified for now)
-                cluster.hitRate = cluster.upPct;
-                
-                cluster.volatilityAdjusted = settings.useATRClustering;
-                
-                return cluster;
-            });
-
-            // Sort by weighted score and filter by confidence
-            analysis = analysis
-                .filter(cluster => cluster.confidence >= settings.confidenceThreshold)
-                .sort((a, b) => b.weightedScore - a.weightedScore)
-                .slice(0, 15);
-
-            updateMetrics();
-            displayResults();
-            
+        const sessionData = filterSessionData(csvData);
+        if (sessionData.length === 0) {
+            document.getElementById('status').innerHTML = '<span class="error">❌ No session data found</span>';
             document.getElementById('analyzeBtn').disabled = false;
-            document.getElementById('exportBtn').disabled = false;
-            document.getElementById('status').innerHTML = `<span class="success">✓ Enhanced analysis complete. Found ${analysis.length} high-confidence clusters.</span>`;
-            
-        } catch (error) {
-            document.getElementById('status').innerHTML = `<span class="error">✗ Analysis error: ${error.message}</span>`;
-            document.getElementById('analyzeBtn').disabled = false;
+            return;
         }
-    }, 1000);
-}
 
-function updateMetrics() {
-    if (analysis.length === 0) return;
+        const clusters = {};
+        const dynamicClusterSize = calculateDynamicClusterSize(sessionData);
+        const totalDataPoints = sessionData.length;
 
-    document.getElementById('totalClusters').textContent = analysis.length;
-    
-    const avgConf = analysis.reduce((sum, c) => sum + c.confidence, 0) / analysis.length;
-    document.getElementById('avgConfidence').textContent = avgConf.toFixed(0) + '%';
-    
-    document.getElementById('topClusterHits').textContent = analysis[0]?.count || 0;
-    
-    if (backtestResults) {
-        document.getElementById('backtestWinRate').textContent = backtestResults.winRate.toFixed(0) + '%';
-    }
-    
-    document.getElementById('metricsSection').style.display = 'block';
+        // Enhanced clustering with session tracking and pattern detection
+        const sessions = new Set();
+        
+        sessionData.forEach((candle, index) => {
+            const sessionKey = candle.dateObj.toDateString();
+            sessions.add(sessionKey);
+            
+            const cluster = Math.round(candle.dailyAvg / dynamicClusterSize) * dynamicClusterSize;
+            const clusterKey = cluster.toFixed(8);
+
+            if (!clusters[clusterKey]) {
+                clusters[clusterKey] = {
+                    cluster,
+                    count: 0,
+                    up: 0,
+                    down: 0,
+                    recentHits: 0,
+                    changePercents: [],
+                    highs: [],
+                    lows: [],
+                    closes: [],
+                    history: [],
+                    sessionCount: 0,
+                    candlestickPatterns: [],
+                    dynamicClusterSize,
+                    weightedSum: 0,
+                    totalWeight: 0,
+                    persistence: 0
+                };
+            }
+
+            const clusterData = clusters[clusterKey];
+            const weight = calculateExponentialWeight(index, totalDataPoints);
+            
+            clusterData.count++;
+            clusterData.history.push(candle);
+            clusterData.changePercents.push(candle.changePercent);
+            clusterData.highs.push(candle.high);
+            clusterData.lows.push(candle.low);
+            clusterData.closes.push(candle.close);
+
+            if (candle.close > candle.open) {
+                clusterData.up++;
+                clusterData.weightedSum += weight;
+            } else {
+                clusterData.down++;
+                clusterData.weightedSum -= weight;
+            }
+            clusterData.totalWeight += weight;
+
+            // Count recent hits (exponentially weighted)
+            if (weight > 0.5) clusterData.recentHits++;
+
+            // Detect candlestick patterns
+            const patterns = detectCandlestickPatterns(sessionData, index);
+            clusterData.candlestickPatterns.push(...patterns);
+
+            // Track session diversity
+            const candleSessions = new Set(clusterData.history.map(c => c.dateObj.toDateString()));
+            clusterData.sessionCount = candleSessions.size;
+        });
+
+        // Calculate enhanced statistics for each cluster
+        analysis = Object.values(clusters).map(cluster => {
+            cluster.upPct = (cluster.up / cluster.count) * 100;
+            cluster.avgChangePercent = cluster.changePercents.reduce((a, b) => a + b, 0) / cluster.count;
+            
+            // Use percentiles for probable levels
+            const sortedHighs = cluster.highs.sort((a, b) => a - b);
+            const sortedLows = cluster.lows.sort((a, b) => a - b);
+            const sortedCloses = cluster.closes.sort((a, b) => a - b);
+            
+            cluster.probableHigh = percentile(sortedHighs, 0.75);
+            cluster.probableLow = percentile(sortedLows, 0.25);
+            cluster.median = percentile(sortedCloses, 0.5);
+
+            // Calculate volatility
+            const mean = cluster.avgChangePercent;
+            const variance = cluster.changePercents.reduce((sum, change) => sum + Math.pow(change - mean, 2), 0) / cluster.count;
+            cluster.volatility = Math.sqrt(variance);
+
+            // Calculate persistence (consecutive hits)
+            let maxConsecutive = 0;
+            let currentConsecutive = 0;
+            for (let i = 1; i < cluster.history.length; i++) {
+                if (cluster.history[i].dateObj.getTime() - cluster.history[i-1].dateObj.getTime() < 2 * 60 * 60 * 1000) {
+                    currentConsecutive++;
+                } else {
+                    maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
+                    currentConsecutive = 0;
+                }
+            }
+            cluster.persistence = maxConsecutive / cluster.count;
+
+            // Enhanced confidence calculation
+            const frequencyFactor = Math.min(cluster.count / totalDataPoints * 100, 40);
+            const weightedBias = cluster.weightedSum / cluster.totalWeight;
+            const consistencyFactor = Math.abs(weightedBias) * 50;
+            const recentFactor = (cluster.recentHits / Math.max(cluster.count, 1)) * 30;
+            const persistenceFactor = cluster.persistence * 20;
+            const volatilityPenalty = Math.min(cluster.volatility * 2, 20);
+            const sessionBonus = Math.min(cluster.sessionCount * 5, 15);
+            const patternBonus = cluster.candlestickPatterns.reduce((sum, pattern) => sum + pattern.strength * 5, 0);
+
+            cluster.confidence = Math.min(95, Math.max(10, 
+                frequencyFactor + consistencyFactor + recentFactor + 
+                persistenceFactor + sessionBonus + patternBonus - volatilityPenalty
+            ));
+
+            // Risk/reward based on cluster extremes
+            const risk = Math.abs(cluster.median - cluster.probableLow) / settings.pipValue;
+            const reward = Math.abs(cluster.probableHigh - cluster.median) / settings.pipValue;
+            cluster.riskReward = reward / Math.max(risk, 1);
+
+            return cluster;
+        }).sort((a, b) => b.confidence - a.confidence).slice(0, 15);
+
+        displayResults();
+        document.getElementById('analyzeBtn').disabled = false;
+        document.getElementById('exportBtn').disabled = false;
+        document.getElementById('status').innerHTML = `<span class="success">✅ Enhanced analysis complete. Found ${analysis.length} clusters with ${dynamicClusterSize/settings.pipValue} pip dynamic sizing.</span>`;
+    }, 2000);
 }
 
 function formatPrice(price) {
@@ -800,45 +826,74 @@ function formatPips(price1, price2) {
 function displayResults() {
     if (analysis.length === 0) return;
 
-    const lastCandle = csvData[csvData.length - 1];
+    const lastClose = csvData[csvData.length - 1].close;
     const topCluster = analysis[0];
     
-    // Enhanced trading forecast
-    const direction = topCluster.median > lastCandle.close ? 'LONG' : 'SHORT';
-    const bias = direction === 'LONG' ? 'BULLISH' : 'BEARISH';
-    const entry = lastCandle.close;
-    const takeProfit = topCluster.median;
+    // Enhanced trading signal logic
+    const direction = topCluster.median > lastClose ? 'LONG' : 'SHORT';
+    const entry = lastClose;
     
-    // Volatility-based stop loss
-    const volatilityStop = topCluster.volatility * settings.pipValue * 15;
-    const clusterStop = direction === 'LONG' ? topCluster.probableLow : topCluster.probableHigh;
-    const stopLoss = direction === 'LONG' ? 
-        Math.max(entry - volatilityStop, clusterStop) : 
-        Math.min(entry + volatilityStop, clusterStop);
+    // Adjust stop-loss based on cluster volatility and patterns
+    let stopLossMultiplier = 1.0;
+    if (topCluster.volatility > 2.0) stopLossMultiplier *= 1.5;
     
-    const riskPips = formatPips(entry, stopLoss);
-    const rewardPips = formatPips(takeProfit, entry);
-    const riskReward = parseFloat(rewardPips) / Math.max(parseFloat(riskPips), 1);
+    const strongPatterns = topCluster.candlestickPatterns.filter(p => p.strength > 0.7);
+    if (strongPatterns.length > 0) stopLossMultiplier *= 0.8;
+    
+    let stopLoss, takeProfit;
+    if (direction === 'LONG') {
+        stopLoss = topCluster.probableLow - (topCluster.dynamicClusterSize * stopLossMultiplier);
+        takeProfit = topCluster.median;
+    } else {
+        stopLoss = topCluster.probableHigh + (topCluster.dynamicClusterSize * stopLossMultiplier);
+        takeProfit = topCluster.median;
+    }
+    
+    const riskPips = parseFloat(formatPips(entry, stopLoss));
+    const rewardPips = parseFloat(formatPips(takeProfit, entry));
+    const riskReward = rewardPips / riskPips;
 
-    // Trading forecast display
-    let forecastHtml = `
-        <div class="big-number ${bias.toLowerCase()}">${direction}</div>
-        <div class="data-row"><span>Entry:</span><span>${formatPrice(entry)}</span></div>
-        <div class="data-row"><span>Target:</span><span class="bullish">${formatPrice(takeProfit)}</span></div>
-        <div class="data-row"><span>Stop Loss:</span><span class="bearish">${formatPrice(stopLoss)}</span></div>
-        <div class="data-row"><span>Risk:Reward:</span><span>1:${riskReward.toFixed(2)}</span></div>
-        <div class="data-row"><span>Confidence:</span><span class="neutral">${topCluster.confidence.toFixed(0)}%</span></div>
-        <div class="trade-suggestion">
-            <strong>🎯 ENHANCED TRADE SIGNAL:</strong><br>
-            ${direction} ${settings.forexPair}<br>
-            Risk: ${riskPips} pips | Reward: ${rewardPips} pips<br>
-    `;
-    
-    if (topCluster.trendAligned) forecastHtml += `<span class="bullish">✓ Trend Aligned</span><br>`;
-    if (topCluster.volatilityAdjusted) forecastHtml += `<span class="neutral">⚡ ATR Adjusted</span><br>`;
-    if (topCluster.confidence > 80) forecastHtml += `<span class="warning">🔥 High Confidence</span>`;
-    
-    forecastHtml += '</div>';
+    // Check minimum risk:reward and confidence
+    const meetsRiskReward = riskReward >= settings.minRiskReward;
+    const meetsConfidence = topCluster.confidence >= settings.minConfidence;
+    const shouldTrade = meetsRiskReward && meetsConfidence;
+
+    // Position sizing
+    const riskAmount = settings.accountBalance * settings.riskPercentage / 100;
+    const positionSize = shouldTrade ? Math.floor(riskAmount / (riskPips * 1)) * 10000 : 0;
+
+    // Trading forecast
+    let forecastHtml;
+    if (!shouldTrade) {
+        const reason = !meetsRiskReward ? `Risk:Reward ${riskReward.toFixed(2)} below minimum ${settings.minRiskReward}` :
+                      !meetsConfidence ? `Confidence ${topCluster.confidence.toFixed(0)}% below minimum ${settings.minConfidence}%` :
+                      'Conditions not met';
+        
+        forecastHtml = `
+            <div class="big-number neutral">NO TRADE</div>
+            <div class="trade-suggestion no-trade">
+                <strong>❌ NO TRADE SIGNAL:</strong><br>
+                ${reason}<br><br>
+                Current Risk:Reward: 1:${riskReward.toFixed(2)}<br>
+                Current Confidence: ${topCluster.confidence.toFixed(0)}%
+            </div>
+        `;
+    } else {
+        forecastHtml = `
+            <div class="big-number ${direction === 'LONG' ? 'bullish' : 'bearish'}">${direction}</div>
+            <div class="data-row"><span>Entry:</span><span>${formatPrice(entry)}</span></div>
+            <div class="data-row"><span>Take Profit:</span><span class="bullish">${formatPrice(takeProfit)}</span></div>
+            <div class="data-row"><span>Stop Loss:</span><span class="bearish">${formatPrice(stopLoss)}</span></div>
+            <div class="data-row"><span>Risk:Reward:</span><span class="badge badge-success">1:${riskReward.toFixed(2)}</span></div>
+            <div class="data-row"><span>Confidence:</span><span class="badge badge-success">${topCluster.confidence.toFixed(0)}%</span></div>
+            <div class="trade-suggestion">
+                <strong>✅ COMPLETE SETUP:</strong><br>
+                ${direction} ${settings.forexPair} @ ${formatPrice(entry)}<br>
+                Position: ${(positionSize/1000).toFixed(0)}K units | Risk: $${riskAmount.toFixed(0)}
+            </div>
+        `;
+    }
+
     document.getElementById('tradingForecast').innerHTML = forecastHtml;
 
     // Cluster summary
@@ -846,28 +901,23 @@ function displayResults() {
         <div class="data-row"><span>Top Cluster:</span><span>${formatPrice(topCluster.cluster)}</span></div>
         <div class="data-row"><span>Total Hits:</span><span>${topCluster.count}</span></div>
         <div class="data-row"><span>Recent Hits:</span><span class="neutral">${topCluster.recentHits}</span></div>
-        <div class="data-row"><span>Success Rate:</span><span class="${topCluster.upPct > 50 ? 'bullish' : 'bearish'}">${topCluster.upPct.toFixed(0)}%</span></div>
+        <div class="data-row"><span>Success Rate:</span><span class="badge ${topCluster.upPct > 50 ? 'badge-success' : 'badge-danger'}">${topCluster.upPct.toFixed(0)}%</span></div>
         <div class="data-row"><span>Volatility:</span><span>${topCluster.volatility.toFixed(2)}%</span></div>
-        <div class="data-row"><span>Probable High:</span><span class="bullish">${formatPrice(topCluster.probableHigh)}</span></div>
-        <div class="data-row"><span>Probable Low:</span><span class="bearish">${formatPrice(topCluster.probableLow)}</span></div>
-        <div class="data-row"><span>Range:</span><span>${formatPips(topCluster.probableHigh, topCluster.probableLow)} pips</span></div>
-        <div class="data-row"><span>Weighted Score:</span><span class="warning">${topCluster.weightedScore.toFixed(1)}</span></div>
+        <div class="data-row"><span>Sessions:</span><span class="neutral">${topCluster.sessionCount}</span></div>
+        <div class="data-row"><span>Patterns:</span><span class="badge badge-warning">${topCluster.candlestickPatterns.length}</span></div>
+        <div class="data-row"><span>Dynamic Size:</span><span>${(topCluster.dynamicClusterSize/settings.pipValue).toFixed(1)} pips</span></div>
     `;
 
-    // Risk analysis
-    const totalRisk = analysis.reduce((sum, c) => sum + (1 / Math.max(c.riskReward, 0.1)), 0) / analysis.length;
-    const avgConfidence = analysis.reduce((sum, c) => sum + c.confidence, 0) / analysis.length;
-    const trendAlignedCount = analysis.filter(c => c.trendAligned).length;
-    
-    document.getElementById('riskAnalysis').innerHTML = `
-        <div class="data-row"><span>Avg Risk Level:</span><span class="${totalRisk > 2 ? 'bearish' : totalRisk > 1 ? 'neutral' : 'bullish'}">${totalRisk.toFixed(2)}</span></div>
-        <div class="data-row"><span>Portfolio Confidence:</span><span class="neutral">${avgConfidence.toFixed(0)}%</span></div>
-        <div class="data-row"><span>Trend Aligned:</span><span class="bullish">${trendAlignedCount}/${analysis.length}</span></div>
-        <div class="data-row"><span>ATR Adjusted:</span><span class="${settings.useATRClustering ? 'bullish' : 'neutral'}">${settings.useATRClustering ? 'Yes' : 'No'}</span></div>
-        <div class="data-row"><span>Outliers Excluded:</span><span class="${settings.excludeOutliers ? 'bullish' : 'neutral'}">${settings.excludeOutliers ? 'Yes' : 'No'}</span></div>
-        <div class="data-row"><span>Recency Weight:</span><span class="warning">${settings.recencyWeight}x</span></div>
-        <div class="data-row"><span>Min Confidence:</span><span class="neutral">${settings.confidenceThreshold}%</span></div>
-        <div class="data-row"><span>Session:</span><span>${settings.sessionStart}-${settings.sessionEnd} ${settings.timezone}</span></div>
+    // Position sizing
+    document.getElementById('positionSizing').innerHTML = `
+        <div class="data-row"><span>Account Balance:</span><span>$${settings.accountBalance.toLocaleString()}</span></div>
+        <div class="data-row"><span>Risk per Trade:</span><span>${settings.riskPercentage}%</span></div>
+        <div class="data-row"><span>Dollar Risk:</span><span class="bearish">$${riskAmount.toFixed(0)}</span></div>
+        <div class="data-row"><span>Risk Pips:</span><span class="bearish">${riskPips}</span></div>
+        <div class="data-row"><span>Reward Pips:</span><span class="bullish">${rewardPips}</span></div>
+        <div class="data-row"><span>Position Size:</span><span class="bullish">${(positionSize/1000).toFixed(0)}K units</span></div>
+        <div class="data-row"><span>Min R:R Required:</span><span class="badge badge-warning">1:${settings.minRiskReward}</span></div>
+        <div class="data-row"><span>Min Confidence:</span><span class="badge badge-warning">${settings.minConfidence}%</span></div>
     `;
 
     // Enhanced clusters table
@@ -875,19 +925,19 @@ function displayResults() {
         <thead>
             <tr>
                 <th>Rank</th>
-                <th>Level</th>
+                <th>Cluster Level</th>
                 <th>Hits</th>
                 <th>Recent</th>
-                <th>Success%</th>
-                <th>Volatility%</th>
+                <th>Success %</th>
                 <th>High</th>
                 <th>Low</th>
                 <th>Median</th>
-                <th>Range</th>
+                <th>Volatility</th>
                 <th>Confidence</th>
                 <th>R:R</th>
-                <th>Score</th>
-                <th>Flags</th>
+                <th>Sessions</th>
+                <th>Patterns</th>
+                <th>Persistence</th>
             </tr>
         </thead>
         <tbody>`;
@@ -895,42 +945,34 @@ function displayResults() {
     analysis.forEach((cluster, i) => {
         const isTop = i === 0;
         const isBullish = cluster.upPct > 50;
-        const rangePips = formatPips(cluster.probableHigh, cluster.probableLow);
-        const confidenceClass = cluster.confidence > 80 ? 'confidence-high' : 
-                              cluster.confidence > 60 ? 'confidence-medium' : 'confidence-low';
         
         tableHtml += `<tr class="${isTop ? 'top-cluster' : ''}">
-            <td>${isTop ? '<strong>🎯 TOP</strong>' : `#${i + 1}`}</td>
-            <td><strong>${formatPrice(cluster.cluster)}</strong></td>
+            <td>${isTop ? '<span class="badge badge-success">TOP</span>' : `#${i + 1}`}</td>
+            <td style="font-family: monospace; font-weight: bold;">${formatPrice(cluster.cluster)}</td>
             <td>${cluster.count}</td>
             <td class="neutral">${cluster.recentHits}</td>
-            <td class="${isBullish ? 'bullish' : 'bearish'}">${cluster.upPct.toFixed(0)}%</td>
-            <td class="neutral">${cluster.volatility.toFixed(1)}%</td>
-            <td class="bullish">${formatPrice(cluster.probableHigh)}</td>
-            <td class="bearish">${formatPrice(cluster.probableLow)}</td>
-            <td><strong>${formatPrice(cluster.median)}</strong></td>
-            <td>${rangePips}p</td>
-            <td><span class="confidence-badge ${confidenceClass}">${cluster.confidence.toFixed(0)}%</span></td>
-            <td class="warning">${cluster.riskReward.toFixed(2)}</td>
-            <td class="neutral">${cluster.weightedScore.toFixed(0)}</td>
-            <td>
-                <div class="flag-icons">
-                    ${cluster.trendAligned ? '<div class="flag-icon flag-trend">T</div>' : ''}
-                    ${cluster.volatilityAdjusted ? '<div class="flag-icon flag-volatility">V</div>' : ''}
-                    ${cluster.confidence > 80 ? '<div class="flag-icon flag-high-conf">H</div>' : ''}
-                </div>
-            </td>
+            <td><span class="badge ${isBullish ? 'badge-success' : 'badge-danger'}">${cluster.upPct.toFixed(0)}%</span></td>
+            <td class="bullish" style="font-family: monospace;">${formatPrice(cluster.probableHigh)}</td>
+            <td class="bearish" style="font-family: monospace;">${formatPrice(cluster.probableLow)}</td>
+            <td style="font-family: monospace; font-weight: bold;">${formatPrice(cluster.median)}</td>
+            <td>${cluster.volatility.toFixed(2)}%</td>
+            <td><span class="badge ${cluster.confidence > 70 ? 'badge-success' : cluster.confidence > 50 ? 'badge-warning' : 'badge-danger'}">${cluster.confidence.toFixed(0)}%</span></td>
+            <td><span class="badge ${cluster.riskReward >= 2 ? 'badge-success' : 'badge-warning'}">1:${cluster.riskReward.toFixed(2)}</span></td>
+            <td class="neutral">${cluster.sessionCount}</td>
+            <td><span class="badge badge-warning">${cluster.candlestickPatterns.length}</span></td>
+            <td>${(cluster.persistence * 100).toFixed(0)}%</td>
         </tr>`;
     });
 
     tableHtml += '</tbody></table>';
-    tableHtml += '<div style="font-size: 10px; margin-top: 15px; color: #656d76; line-height: 1.4;">';
-    tableHtml += '<strong>🧠 Enhanced Algorithm Notes:</strong><br>';
-    tableHtml += `• Score = Frequency × Success Rate × Recency Weight (${settings.recencyWeight}x) × Volatility Factor<br>`;
-    tableHtml += '• Range: 75th percentile high to 25th percentile low spread<br>';
-    tableHtml += '• <strong>T</strong>=Trend Aligned | <strong>V</strong>=ATR Volatility Adjusted | <strong>H</strong>=High Confidence (>80%)<br>';
-    tableHtml += `• Dynamic clustering: ${settings.useATRClustering ? 'ATR-based' : 'Fixed'} | Outliers: ${settings.excludeOutliers ? 'Excluded' : 'Included'}<br>`;
-    tableHtml += `• Session: ${settings.sessionStart}-${settings.sessionEnd} ${settings.timezone} | Lookback: ${settings.lookbackDays} days | Min Confidence: ${settings.confidenceThreshold}%`;
+    tableHtml += `<div style="font-size: 11px; margin-top: 15px; padding: 15px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border-left: 3px solid #22c55e;">`;
+    tableHtml += '<strong>🚀 Enhanced Analysis Notes:</strong><br>';
+    tableHtml += '• <strong>Dynamic Clustering:</strong> Cluster size auto-adjusted based on recent volatility<br>';
+    tableHtml += '• <strong>Exponential Weighting:</strong> Recent candles weighted more heavily<br>';
+    tableHtml += '• <strong>Pattern Recognition:</strong> Pin bars, engulfing, inside bars, doji patterns detected<br>';
+    tableHtml += '• <strong>Session Analysis:</strong> Multi-session validation for stronger signals<br>';
+    tableHtml += '• <strong>Smart Risk Management:</strong> Volatility-adjusted stops with minimum R:R requirements<br>';
+    tableHtml += '• <strong>Confidence Scoring:</strong> Frequency + Consistency + Recency + Persistence + Patterns - Volatility Penalty';
     tableHtml += '</div>';
 
     document.getElementById('clustersTable').innerHTML = tableHtml;
@@ -940,238 +982,24 @@ function displayResults() {
     document.getElementById('clustersSection').style.display = 'block';
 }
 
-function runBacktest() {
-    if (csvData.length === 0 || analysis.length === 0) {
-        document.getElementById('status').innerHTML = '<span class="error">✗ Need data and analysis first</span>';
-        return;
-    }
-
-    document.getElementById('status').innerHTML = '<span class="loading">⏳ Running backtest simulation...</span>';
-    document.getElementById('backtestBtn').disabled = true;
-
-    setTimeout(() => {
-        try {
-            // Simple backtest simulation
-            const sessionData = filterSessionData(csvData);
-            let wins = 0;
-            let losses = 0;
-            let totalProfit = 0;
-            const trades = [];
-
-            // Simulate trades on each cluster hit
-            analysis.forEach(cluster => {
-                cluster.history.forEach(candle => {
-                    const direction = cluster.median > candle.close ? 'LONG' : 'SHORT';
-                    const entry = candle.close;
-                    const target = cluster.median;
-                    const stopDistance = cluster.volatility * settings.pipValue * 15;
-                    const stop = direction === 'LONG' ? 
-                        Math.max(entry - stopDistance, cluster.probableLow) : 
-                        Math.min(entry + stopDistance, cluster.probableHigh);
-
-                    // Find next candle to simulate outcome
-                    const candleIndex = sessionData.findIndex(c => c.dateObj.getTime() === candle.dateObj.getTime());
-                    if (candleIndex < sessionData.length - 1) {
-                        const nextCandle = sessionData[candleIndex + 1];
-                        
-                        let outcome = 'pending';
-                        let profit = 0;
-                        
-                        if (direction === 'LONG') {
-                            if (nextCandle.high >= target) {
-                                outcome = 'win';
-                                profit = (target - entry) / settings.pipValue;
-                                wins++;
-                            } else if (nextCandle.low <= stop) {
-                                outcome = 'loss';
-                                profit = (stop - entry) / settings.pipValue;
-                                losses++;
-                            }
-                        } else {
-                            if (nextCandle.low <= target) {
-                                outcome = 'win';
-                                profit = (entry - target) / settings.pipValue;
-                                wins++;
-                            } else if (nextCandle.high >= stop) {
-                                outcome = 'loss';
-                                profit = (entry - stop) / settings.pipValue;
-                                losses++;
-                            }
-                        }
-                        
-                        if (outcome !== 'pending') {
-                            totalProfit += profit;
-                            trades.push({
-                                date: candle.date,
-                                direction,
-                                entry: formatPrice(entry),
-                                target: formatPrice(target),
-                                stop: formatPrice(stop),
-                                outcome,
-                                profit: profit.toFixed(1),
-                                cluster: cluster.cluster
-                            });
-                        }
-                    }
-                });
-            });
-
-            const totalTrades = wins + losses;
-            const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-            const avgWin = wins > 0 ? trades.filter(t => t.outcome === 'win').reduce((sum, t) => sum + parseFloat(t.profit), 0) / wins : 0;
-            const avgLoss = losses > 0 ? Math.abs(trades.filter(t => t.outcome === 'loss').reduce((sum, t) => sum + parseFloat(t.profit), 0)) / losses : 0;
-            const profitFactor = avgLoss > 0 ? (avgWin * wins) / (avgLoss * losses) : 0;
-
-            backtestResults = {
-                totalTrades,
-                wins,
-                losses,
-                winRate,
-                totalProfit,
-                avgWin,
-                avgLoss,
-                profitFactor,
-                trades: trades.slice(-10) // Show last 10 trades
-            };
-
-            // Display backtest results
-            let backtestHtml = `
-                <div class="metrics-grid" style="margin-bottom: 20px;">
-                    <div class="metric-card">
-                        <div class="metric-value bullish">${wins}</div>
-                        <div class="metric-label">WINS</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value bearish">${losses}</div>
-                        <div class="metric-label">LOSSES</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value ${winRate >= 60 ? 'bullish' : winRate >= 40 ? 'neutral' : 'bearish'}">${winRate.toFixed(1)}%</div>
-                        <div class="metric-label">WIN RATE</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value ${totalProfit > 0 ? 'bullish' : 'bearish'}">${totalProfit.toFixed(0)}</div>
-                        <div class="metric-label">TOTAL PIPS</div>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                    <div class="data-row"><span>Avg Win:</span><span class="bullish">+${avgWin.toFixed(1)} pips</span></div>
-                    <div class="data-row"><span>Avg Loss:</span><span class="bearish">-${avgLoss.toFixed(1)} pips</span></div>
-                    <div class="data-row"><span>Profit Factor:</span><span class="${profitFactor > 1 ? 'bullish' : 'bearish'}">${profitFactor.toFixed(2)}</span></div>
-                </div>
-            `;
-
-            if (trades.length > 0) {
-                backtestHtml += '<h4>📊 Recent Simulated Trades:</h4><table style="font-size: 10px;"><thead><tr><th>Date</th><th>Dir</th><th>Entry</th><th>Target</th><th>Stop</th><th>Result</th><th>Pips</th></tr></thead><tbody>';
-                
-                backtestResults.trades.forEach(trade => {
-                    backtestHtml += `<tr class="${trade.outcome === 'win' ? 'bullish' : 'bearish'}">
-                        <td>${trade.date.split(' ')[0]}</td>
-                        <td>${trade.direction}</td>
-                        <td>${trade.entry}</td>
-                        <td>${trade.target}</td>
-                        <td>${trade.stop}</td>
-                        <td class="${trade.outcome === 'win' ? 'bullish' : 'bearish'}">${trade.outcome.toUpperCase()}</td>
-                        <td class="${parseFloat(trade.profit) > 0 ? 'bullish' : 'bearish'}">${trade.profit}</td>
-                    </tr>`;
-                });
-                
-                backtestHtml += '</tbody></table>';
-            }
-
-            document.getElementById('backtestResults').innerHTML = backtestHtml;
-            document.getElementById('backtestSection').style.display = 'block';
-            
-            updateMetrics(); // Update metrics with backtest win rate
-            
-            document.getElementById('status').innerHTML = `<span class="success">✓ Backtest complete: ${totalTrades} trades, ${winRate.toFixed(1)}% win rate</span>`;
-            
-        } catch (error) {
-            document.getElementById('status').innerHTML = `<span class="error">✗ Backtest error: ${error.message}</span>`;
-        } finally {
-            document.getElementById('backtestBtn').disabled = false;
-        }
-    }, 1500);
-}
-
-function exportResults() {
+function downloadCSV() {
     if (analysis.length === 0) return;
 
-    const timestamp = new Date().toISOString().split('T')[0];
+    let csv = 'Rank,Pair,Cluster,TotalHits,RecentHits,SuccessRate,Volatility,ProbableHigh,ProbableLow,Median,Confidence,RiskReward,Sessions,Patterns,Persistence,DynamicSize\n';
     
-    // Enhanced CSV export with all metrics
-    const headers = [
-        'Timestamp', 'Pair', 'Rank', 'ClusterLevel', 'TotalHits', 'RecentHits', 'SuccessRate%', 
-        'Volatility%', 'AvgChange%', 'ProbableHigh', 'ProbableLow', 'Median', 'RangePips', 
-        'Confidence%', 'RiskReward', 'WeightedScore', 'TrendAligned', 'VolatilityAdjusted',
-        'RecencyWeight', 'MinConfidence', 'ATRPeriod', 'SessionStart', 'SessionEnd', 'Timezone'
-    ];
-
-    const rows = analysis.map((cluster, index) => [
-        timestamp,
-        settings.forexPair,
-        index + 1,
-        cluster.cluster.toFixed(5),
-        cluster.count,
-        cluster.recentHits,
-        cluster.upPct.toFixed(1),
-        cluster.volatility.toFixed(2),
-        cluster.avgChangePercent.toFixed(2),
-        cluster.probableHigh.toFixed(5),
-        cluster.probableLow.toFixed(5),
-        cluster.median.toFixed(5),
-        formatPips(cluster.probableHigh, cluster.probableLow),
-        cluster.confidence.toFixed(0),
-        cluster.riskReward.toFixed(2),
-        cluster.weightedScore.toFixed(1),
-        cluster.trendAligned,
-        cluster.volatilityAdjusted,
-        settings.recencyWeight,
-        settings.confidenceThreshold,
-        settings.atrPeriod,
-        settings.sessionStart,
-        settings.sessionEnd,
-        settings.timezone
-    ]);
-
-    let csvContent = headers.join(',') + '\n' + rows.map(row => row.join(',')).join('\n');
-
-    // Add backtest results if available
-    if (backtestResults) {
-        csvContent += '\n\n# BACKTEST RESULTS\n';
-        csvContent += `TotalTrades,Wins,Losses,WinRate%,TotalPips,AvgWin,AvgLoss,ProfitFactor\n`;
-        csvContent += `${backtestResults.totalTrades},${backtestResults.wins},${backtestResults.losses},${backtestResults.winRate.toFixed(1)},${backtestResults.totalProfit.toFixed(0)},${backtestResults.avgWin.toFixed(1)},${backtestResults.avgLoss.toFixed(1)},${backtestResults.profitFactor.toFixed(2)}\n`;
-    }
+    analysis.forEach((c, i) => {
+        csv += `${i+1},${settings.forexPair},${c.cluster.toFixed(5)},${c.count},${c.recentHits},${c.upPct.toFixed(1)}%,${c.volatility.toFixed(2)}%,${c.probableHigh.toFixed(5)},${c.probableLow.toFixed(5)},${c.median.toFixed(5)},${c.confidence.toFixed(0)}%,${c.riskReward.toFixed(2)},${c.sessionCount},${c.candlestickPatterns.length},${(c.persistence*100).toFixed(0)}%,${(c.dynamicClusterSize/settings.pipValue).toFixed(1)}\n`;
+    });
     
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${settings.forexPair}_Enhanced_Cluster_Analysis_${timestamp}.csv`;
+    link.download = `${settings.forexPair}_Enhanced_Cluster_Analysis.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
-    document.getElementById('status').innerHTML = '<span class="success">✓ Enhanced analysis exported with full metrics</span>';
-}
-
-function resetAnalysis() {
-    csvData = [];
-    analysis = [];
-    backtestResults = null;
-    
-    document.getElementById('analyzeBtn').disabled = true;
-    document.getElementById('backtestBtn').disabled = true;
-    document.getElementById('exportBtn').disabled = true;
-    
-    document.getElementById('forecastSection').style.display = 'none';
-    document.getElementById('clustersSection').style.display = 'none';
-    document.getElementById('backtestSection').style.display = 'none';
-    document.getElementById('metricsSection').style.display = 'none';
-    
-    document.getElementById('status').innerHTML = 'Upload new CSV data to begin analysis...';
 }
 </script>
 </body>
