@@ -840,18 +840,28 @@ function displayResults() {
     const strongPatterns = topCluster.candlestickPatterns.filter(p => p.strength > 0.7);
     if (strongPatterns.length > 0) stopLossMultiplier *= 0.8;
     
-    let stopLoss, takeProfit;
-    if (direction === 'LONG') {
-        stopLoss = topCluster.probableLow - (topCluster.dynamicClusterSize * stopLossMultiplier);
-        takeProfit = topCluster.median;
-    } else {
-        stopLoss = topCluster.probableHigh + (topCluster.dynamicClusterSize * stopLossMultiplier);
-        takeProfit = topCluster.median;
-    }
-    
-    const riskPips = parseFloat(formatPips(entry, stopLoss));
-    const rewardPips = parseFloat(formatPips(takeProfit, entry));
-    const riskReward = rewardPips / riskPips;
+   let stopLoss, takeProfit;
+
+// Include a volatility buffer for more realistic SL/TP
+const volatilityBuffer = topCluster.volatility * topCluster.dynamicClusterSize / 100;
+
+if (direction === 'LONG') {
+    // Stop-loss must be below entry
+    stopLoss = topCluster.probableLow - (topCluster.dynamicClusterSize * stopLossMultiplier) - volatilityBuffer;
+    takeProfit = Math.max(topCluster.median, entry + topCluster.dynamicClusterSize + volatilityBuffer);
+    if (stopLoss >= entry) stopLoss = entry - (topCluster.dynamicClusterSize * stopLossMultiplier) - volatilityBuffer;
+} else { // SHORT
+    // Stop-loss must be above entry
+    stopLoss = topCluster.probableHigh + (topCluster.dynamicClusterSize * stopLossMultiplier) + volatilityBuffer;
+    takeProfit = Math.min(topCluster.median, entry - topCluster.dynamicClusterSize - volatilityBuffer);
+    if (stopLoss <= entry) stopLoss = entry + (topCluster.dynamicClusterSize * stopLossMultiplier) + volatilityBuffer;
+}
+
+// Risk/reward calculations
+const riskPips = parseFloat(formatPips(entry, stopLoss));
+const rewardPips = parseFloat(formatPips(takeProfit, entry));
+const riskReward = rewardPips / riskPips;
+
 
     // Check minimum risk:reward and confidence
     const meetsRiskReward = riskReward >= settings.minRiskReward;
