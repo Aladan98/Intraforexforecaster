@@ -842,32 +842,41 @@ function displayResults() {
     
   let stopLoss, takeProfit;
 
-// Get session extremes for the last session candles
+// Session extremes
 const sessionData = filterSessionData(csvData);
 const sessionHigh = Math.max(...sessionData.map(c => c.high));
 const sessionLow = Math.min(...sessionData.map(c => c.low));
 
-// Add volatility buffer
+// Volatility buffer
 const volatilityBuffer = topCluster.volatility * topCluster.dynamicClusterSize / 100;
 
+// Minimum distance (in pips) for SL/TP to avoid unrealistic tight trades
+const minPipDistance = 8 * settings.pipValue;  // e.g. 8 pips
+const targetMultiple = 2.0;  // aim for at least 1:2 risk/reward
+
 if (direction === 'LONG') {
-    // Stop-loss below entry, not lower than session low
-    stopLoss = Math.max(sessionLow, entry - topCluster.dynamicClusterSize - volatilityBuffer);
-    // Take-profit above entry, capped by median or session high
-    takeProfit = Math.min(topCluster.median, entry + topCluster.dynamicClusterSize + volatilityBuffer);
-    if (stopLoss >= entry) stopLoss = entry - (topCluster.dynamicClusterSize * stopLossMultiplier);
+    // Stop-loss: below entry, but not tighter than min distance
+    stopLoss = Math.max(sessionLow, entry - Math.max(topCluster.dynamicClusterSize, minPipDistance) - volatilityBuffer);
+
+    // Take-profit: above entry, at least multiple of risk, capped at session high or median
+    const risk = entry - stopLoss;
+    takeProfit = Math.min(sessionHigh, entry + (risk * targetMultiple));
+    takeProfit = Math.max(takeProfit, entry + minPipDistance);
 } else { // SHORT
-    // Stop-loss above entry, not higher than session high
-    stopLoss = Math.min(sessionHigh, entry + topCluster.dynamicClusterSize + volatilityBuffer);
-    // Take-profit below entry, capped by median or session low
-    takeProfit = Math.max(topCluster.median, entry - topCluster.dynamicClusterSize - volatilityBuffer);
-    if (stopLoss <= entry) stopLoss = entry + (topCluster.dynamicClusterSize * stopLossMultiplier);
+    // Stop-loss: above entry, but not tighter than min distance
+    stopLoss = Math.min(sessionHigh, entry + Math.max(topCluster.dynamicClusterSize, minPipDistance) + volatilityBuffer);
+
+    // Take-profit: below entry, at least multiple of risk, capped at session low or median
+    const risk = stopLoss - entry;
+    takeProfit = Math.max(sessionLow, entry - (risk * targetMultiple));
+    takeProfit = Math.min(takeProfit, entry - minPipDistance);
 }
 
 // Recalculate risk/reward
 const riskPips = parseFloat(formatPips(entry, stopLoss));
 const rewardPips = parseFloat(formatPips(takeProfit, entry));
 const riskReward = rewardPips / riskPips;
+
 
 
 
