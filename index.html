@@ -840,27 +840,35 @@ function displayResults() {
     const strongPatterns = topCluster.candlestickPatterns.filter(p => p.strength > 0.7);
     if (strongPatterns.length > 0) stopLossMultiplier *= 0.8;
     
-   let stopLoss, takeProfit;
+  let stopLoss, takeProfit;
 
-// Include a volatility buffer for more realistic SL/TP
+// Get session extremes for the last session candles
+const sessionData = filterSessionData(csvData);
+const sessionHigh = Math.max(...sessionData.map(c => c.high));
+const sessionLow = Math.min(...sessionData.map(c => c.low));
+
+// Add volatility buffer
 const volatilityBuffer = topCluster.volatility * topCluster.dynamicClusterSize / 100;
 
 if (direction === 'LONG') {
-    // Stop-loss must be below entry
-    stopLoss = topCluster.probableLow - (topCluster.dynamicClusterSize * stopLossMultiplier) - volatilityBuffer;
-    takeProfit = Math.max(topCluster.median, entry + topCluster.dynamicClusterSize + volatilityBuffer);
-    if (stopLoss >= entry) stopLoss = entry - (topCluster.dynamicClusterSize * stopLossMultiplier) - volatilityBuffer;
+    // Stop-loss below entry, not lower than session low
+    stopLoss = Math.max(sessionLow, entry - topCluster.dynamicClusterSize - volatilityBuffer);
+    // Take-profit above entry, capped by median or session high
+    takeProfit = Math.min(topCluster.median, entry + topCluster.dynamicClusterSize + volatilityBuffer);
+    if (stopLoss >= entry) stopLoss = entry - (topCluster.dynamicClusterSize * stopLossMultiplier);
 } else { // SHORT
-    // Stop-loss must be above entry
-    stopLoss = topCluster.probableHigh + (topCluster.dynamicClusterSize * stopLossMultiplier) + volatilityBuffer;
-    takeProfit = Math.min(topCluster.median, entry - topCluster.dynamicClusterSize - volatilityBuffer);
-    if (stopLoss <= entry) stopLoss = entry + (topCluster.dynamicClusterSize * stopLossMultiplier) + volatilityBuffer;
+    // Stop-loss above entry, not higher than session high
+    stopLoss = Math.min(sessionHigh, entry + topCluster.dynamicClusterSize + volatilityBuffer);
+    // Take-profit below entry, capped by median or session low
+    takeProfit = Math.max(topCluster.median, entry - topCluster.dynamicClusterSize - volatilityBuffer);
+    if (stopLoss <= entry) stopLoss = entry + (topCluster.dynamicClusterSize * stopLossMultiplier);
 }
 
-// Risk/reward calculations
+// Recalculate risk/reward
 const riskPips = parseFloat(formatPips(entry, stopLoss));
 const rewardPips = parseFloat(formatPips(takeProfit, entry));
 const riskReward = rewardPips / riskPips;
+
 
 
     // Check minimum risk:reward and confidence
