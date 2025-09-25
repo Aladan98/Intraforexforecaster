@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Enhanced Forex Cluster Analysis - Pure Price Action</title>
-    <meta name="description" content="Advanced Forex cluster analysis with dynamic clustering, exponential weighting, session analysis, and candlestick pattern recognition">
+    <meta name="description" content="Advanced Forex cluster analysis with dynamic clustering, exponential weighting, and candlestick pattern recognition">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -43,7 +43,7 @@
             margin-bottom: 25px;
             border-radius: 12px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 25px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
@@ -288,37 +288,19 @@
                     <input type="number" id="basePips" value="5" min="1"/>
                 </div>
                 <div>
-                    <label for="lookbackDays">Lookback Days:</label>
-                    <input type="number" id="lookbackDays" value="3" min="1" max="30"/>
+                    <label for="accountBalance">Account Balance ($):</label>
+                    <input type="number" id="accountBalance" value="10000" min="1000"/>
                 </div>
             </div>
         </div>
         
         <div>
-            <h3>Session & Risk</h3>
+            <h3>Risk & Analysis Settings</h3>
             <div class="settings-group">
-                <div>
-                    <label for="sessionStart">Session Start:</label>
-                    <input type="time" id="sessionStart" value="12:00"/>
-                </div>
-                <div>
-                    <label for="sessionEnd">Session End:</label>
-                    <input type="time" id="sessionEnd" value="16:00"/>
-                </div>
-                <div>
-                    <label for="accountBalance">Account Balance ($):</label>
-                    <input type="number" id="accountBalance" value="10000" min="1000"/>
-                </div>
                 <div>
                     <label for="riskPercentage">Risk per Trade (%):</label>
                     <input type="number" id="riskPercentage" value="2" min="0.5" max="10" step="0.5"/>
                 </div>
-            </div>
-        </div>
-        
-        <div>
-            <h3>Advanced Settings</h3>
-            <div class="settings-group">
                 <div>
                     <label for="minRiskReward">Min Risk:Reward:</label>
                     <input type="number" id="minRiskReward" value="2.0" min="1" max="5" step="0.1"/>
@@ -331,20 +313,17 @@
                     <label for="volatilityLookback">Volatility Lookback:</label>
                     <input type="number" id="volatilityLookback" value="20" min="5" max="100"/>
                 </div>
-                <div>
-                    <label for="exponentialDecay">Exponential Decay:</label>
-                    <input type="number" id="exponentialDecay" value="0.1" min="0.01" max="1" step="0.01"/>
-                </div>
             </div>
         </div>
         
         <div>
-            <h3>Data Upload</h3>
+            <h3>Data Upload & Analysis</h3>
             <div class="upload-area" onclick="document.getElementById('csvFile').click()">
                 <p><strong>📊 Click to Upload CSV File</strong></p>
                 <p style="color: #94a3b8; font-size: 12px; margin-top: 12px;">
                     Required: Date, Open, High, Low, Close<br>
-                    Optional: Volume
+                    Optional: Volume<br>
+                    <strong>Analysis starts automatically!</strong>
                 </p>
             </div>
             <input type="file" id="csvFile" accept=".csv" style="display: none;"/>
@@ -352,6 +331,10 @@
             <div style="margin-top: 20px;">
                 <button onclick="analyzeData()" id="analyzeBtn" disabled>🚀 ANALYZE CLUSTERS</button>
                 <button onclick="downloadCSV()" id="exportBtn" disabled>📥 EXPORT DATA</button>
+            </div>
+            <div>
+                <label for="exponentialDecay">Exponential Decay:</label>
+                <input type="number" id="exponentialDecay" value="0.1" min="0.01" max="1" step="0.01"/>
             </div>
         </div>
     </div>
@@ -390,8 +373,8 @@
                 <p>Recent candles weighted more heavily in confidence scoring with configurable decay factor for recency bias.</p>
             </div>
             <div class="feature-item">
-                <h4>Session Analysis</h4>
-                <p>Multi-session data tracking with session diversity bonuses for stronger, cross-session validated signals.</p>
+                <h4>Full Dataset Analysis</h4>
+                <p>Analyzes complete CSV data automatically without time restrictions for comprehensive market insights.</p>
             </div>
             <div class="feature-item">
                 <h4>Pattern Recognition</h4>
@@ -403,7 +386,7 @@
             </div>
             <div class="feature-item">
                 <h4>Trend Bias Integration</h4>
-                <p>Optional short-term trend alignment using median price calculations without traditional indicators.</p>
+                <p>Short-term trend alignment using median price calculations without traditional indicators.</p>
             </div>
         </div>
     </div>
@@ -416,9 +399,6 @@ let settings = {
     forexPair: 'EURUSD',
     candleSize: '30m',
     basePips: 5,
-    lookbackDays: 3,
-    sessionStart: '12:00',
-    sessionEnd: '16:00',
     accountBalance: 10000,
     riskPercentage: 2,
     pipValue: 0.0001,
@@ -439,10 +419,10 @@ document.getElementById('csvFile').addEventListener('change', e => {
 });
 
 // Update settings when form changes
-['forexPair', 'candleSize', 'basePips', 'lookbackDays', 'sessionStart', 'sessionEnd', 'accountBalance', 'riskPercentage', 'minRiskReward', 'volatilityLookback', 'exponentialDecay', 'minConfidence'].forEach(id => {
+['forexPair', 'candleSize', 'basePips', 'accountBalance', 'riskPercentage', 'minRiskReward', 'volatilityLookback', 'exponentialDecay', 'minConfidence'].forEach(id => {
     document.getElementById(id).addEventListener('change', e => {
         let value = e.target.value;
-        if (['basePips', 'lookbackDays', 'accountBalance', 'volatilityLookback', 'minConfidence'].includes(id)) {
+        if (['basePips', 'accountBalance', 'volatilityLookback', 'minConfidence'].includes(id)) {
             value = parseInt(value) || settings[id];
         } else if (['riskPercentage', 'minRiskReward', 'exponentialDecay'].includes(id)) {
             value = parseFloat(value) || settings[id];
@@ -451,6 +431,11 @@ document.getElementById('csvFile').addEventListener('change', e => {
         
         if (id === 'forexPair') {
             settings.pipValue = detectPipValue(value);
+        }
+        
+        // Auto-reanalyze if data exists and settings change
+        if (csvData.length > 0) {
+            analyzeData();
         }
     });
 });
@@ -527,7 +512,7 @@ function parseCSV(csvText) {
         csvData.sort((a, b) => a.dateObj - b.dateObj);
         
         document.getElementById('analyzeBtn').disabled = false;
-        document.getElementById('status').innerHTML = `<span class="success">✅ Loaded ${csvData.length} candles${skippedRows > 0 ? `, skipped ${skippedRows} invalid rows` : ''}</span>`;
+        document.getElementById('status').innerHTML = `<span class="success">✅ Loaded ${csvData.length} candles${skippedRows > 0 ? `, skipped ${skippedRows} invalid rows` : ''} - Starting automatic analysis...</span>`;
         
         // Auto-detect pair
         if (csvData.length > 0) {
@@ -539,29 +524,12 @@ function parseCSV(csvText) {
             }
         }
         
+        // Automatically start analysis
+        setTimeout(() => analyzeData(), 500);
+        
     } catch (error) {
         document.getElementById('status').innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
     }
-}
-
-function filterSessionData(data) {
-    const now = new Date();
-    const cutoffDate = new Date(now.getTime() - settings.lookbackDays * 24 * 60 * 60 * 1000);
-
-    return data.filter(candle => {
-        if (candle.dateObj < cutoffDate) return false;
-
-        const hour = candle.dateObj.getHours();
-        const minute = candle.dateObj.getMinutes();
-        const timeValue = hour * 60 + minute;
-        
-        const [startHour, startMinute] = settings.sessionStart.split(':').map(Number);
-        const [endHour, endMinute] = settings.sessionEnd.split(':').map(Number);
-        const sessionStartValue = startHour * 60 + startMinute;
-        const sessionEndValue = endHour * 60 + endMinute;
-
-        return timeValue >= sessionStartValue && timeValue < sessionEndValue;
-    });
 }
 
 function percentile(arr, p) {
@@ -676,27 +644,28 @@ function detectCandlestickPatterns(candles, index) {
 function analyzeData() {
     if (csvData.length === 0) return;
 
-    document.getElementById('status').innerHTML = '<span class="loading">⏳ Running enhanced cluster analysis...</span>';
+    document.getElementById('status').innerHTML = '<span class="loading">⏳ Running enhanced cluster analysis on full dataset...</span>';
     document.getElementById('analyzeBtn').disabled = true;
 
     setTimeout(() => {
-        const sessionData = filterSessionData(csvData);
-        if (sessionData.length === 0) {
-            document.getElementById('status').innerHTML = '<span class="error">❌ No session data found</span>';
+        // Use all CSV data instead of filtering by sessions
+        const analysisData = csvData;
+        if (analysisData.length === 0) {
+            document.getElementById('status').innerHTML = '<span class="error">❌ No data found</span>';
             document.getElementById('analyzeBtn').disabled = false;
             return;
         }
 
         const clusters = {};
-        const dynamicClusterSize = calculateDynamicClusterSize(sessionData);
-        const totalDataPoints = sessionData.length;
+        const dynamicClusterSize = calculateDynamicClusterSize(analysisData);
+        const totalDataPoints = analysisData.length;
 
-        // Enhanced clustering with session tracking and pattern detection
-        const sessions = new Set();
+        // Enhanced clustering with pattern detection - no session filtering
+        const days = new Set();
         
-        sessionData.forEach((candle, index) => {
-            const sessionKey = candle.dateObj.toDateString();
-            sessions.add(sessionKey);
+        analysisData.forEach((candle, index) => {
+            const dayKey = candle.dateObj.toDateString();
+            days.add(dayKey);
             
             const cluster = Math.round(candle.dailyAvg / dynamicClusterSize) * dynamicClusterSize;
             const clusterKey = cluster.toFixed(8);
@@ -713,7 +682,7 @@ function analyzeData() {
                     lows: [],
                     closes: [],
                     history: [],
-                    sessionCount: 0,
+                    dayCount: 0,
                     candlestickPatterns: [],
                     dynamicClusterSize,
                     weightedSum: 0,
@@ -745,12 +714,12 @@ function analyzeData() {
             if (weight > 0.5) clusterData.recentHits++;
 
             // Detect candlestick patterns
-            const patterns = detectCandlestickPatterns(sessionData, index);
+            const patterns = detectCandlestickPatterns(analysisData, index);
             clusterData.candlestickPatterns.push(...patterns);
 
-            // Track session diversity
-            const candleSessions = new Set(clusterData.history.map(c => c.dateObj.toDateString()));
-            clusterData.sessionCount = candleSessions.size;
+            // Track day diversity instead of session
+            const candleDays = new Set(clusterData.history.map(c => c.dateObj.toDateString()));
+            clusterData.dayCount = candleDays.size;
         });
 
         // Calculate enhanced statistics for each cluster
@@ -792,12 +761,12 @@ function analyzeData() {
             const recentFactor = (cluster.recentHits / Math.max(cluster.count, 1)) * 30;
             const persistenceFactor = cluster.persistence * 20;
             const volatilityPenalty = Math.min(cluster.volatility * 2, 20);
-            const sessionBonus = Math.min(cluster.sessionCount * 5, 15);
+            const dayBonus = Math.min(cluster.dayCount * 3, 15);
             const patternBonus = cluster.candlestickPatterns.reduce((sum, pattern) => sum + pattern.strength * 5, 0);
 
             cluster.confidence = Math.min(95, Math.max(10, 
                 frequencyFactor + consistencyFactor + recentFactor + 
-                persistenceFactor + sessionBonus + patternBonus - volatilityPenalty
+                persistenceFactor + dayBonus + patternBonus - volatilityPenalty
             ));
 
             // Risk/reward based on cluster extremes
@@ -811,8 +780,8 @@ function analyzeData() {
         displayResults();
         document.getElementById('analyzeBtn').disabled = false;
         document.getElementById('exportBtn').disabled = false;
-        document.getElementById('status').innerHTML = `<span class="success">✅ Enhanced analysis complete. Found ${analysis.length} clusters with ${dynamicClusterSize/settings.pipValue} pip dynamic sizing.</span>`;
-    }, 2000);
+        document.getElementById('status').innerHTML = `<span class="success">✅ Enhanced analysis complete on ${totalDataPoints} candles. Found ${analysis.length} clusters with ${(dynamicClusterSize/settings.pipValue).toFixed(1)} pip dynamic sizing.</span>`;
+    }, 1500);
 }
 
 function formatPrice(price) {
@@ -840,45 +809,41 @@ function displayResults() {
     const strongPatterns = topCluster.candlestickPatterns.filter(p => p.strength > 0.7);
     if (strongPatterns.length > 0) stopLossMultiplier *= 0.8;
     
-let stopLoss, takeProfit;
+    let stopLoss, takeProfit;
 
-// Session extremes
-const sessionData = filterSessionData(csvData);
-const sessionHigh = Math.max(...sessionData.map(c => c.high));
-const sessionLow = Math.min(...sessionData.map(c => c.low));
+    // Dataset extremes instead of session extremes
+    const datasetHigh = Math.max(...csvData.map(c => c.high));
+    const datasetLow = Math.min(...csvData.map(c => c.low));
 
-// Volatility buffer
-const volatilityBuffer = topCluster.volatility * topCluster.dynamicClusterSize / 100;
+    // Volatility buffer
+    const volatilityBuffer = topCluster.volatility * topCluster.dynamicClusterSize / 100;
 
-// Minimum distance (in pips) for SL/TP to avoid unrealistic tight trades
-const minPipDistance = 8 * settings.pipValue;  // e.g. 8 pips
-const targetMultiple = 2.0;  // aim for at least 1:2 risk/reward
+    // Minimum distance (in pips) for SL/TP to avoid unrealistic tight trades
+    const minPipDistance = 8 * settings.pipValue;  // e.g. 8 pips
+    const targetMultiple = 2.0;  // aim for at least 1:2 risk/reward
 
-if (direction === 'LONG') {
-    // Stop-loss: below entry, but not tighter than min distance
-    stopLoss = Math.max(sessionLow, entry - Math.max(topCluster.dynamicClusterSize, minPipDistance) - volatilityBuffer);
+    if (direction === 'LONG') {
+        // Stop-loss: below entry, but not tighter than min distance
+        stopLoss = Math.max(datasetLow, entry - Math.max(topCluster.dynamicClusterSize, minPipDistance) - volatilityBuffer);
 
-    // Take-profit: above entry, at least multiple of risk, capped at session high or median
-    const risk = entry - stopLoss;
-    takeProfit = Math.min(sessionHigh, entry + (risk * targetMultiple));
-    takeProfit = Math.max(takeProfit, entry + minPipDistance);
-} else { // SHORT
-    // Stop-loss: above entry, but not tighter than min distance
-    stopLoss = Math.min(sessionHigh, entry + Math.max(topCluster.dynamicClusterSize, minPipDistance) + volatilityBuffer);
+        // Take-profit: above entry, at least multiple of risk, capped at dataset high or median
+        const risk = entry - stopLoss;
+        takeProfit = Math.min(datasetHigh, entry + (risk * targetMultiple));
+        takeProfit = Math.max(takeProfit, entry + minPipDistance);
+    } else { // SHORT
+        // Stop-loss: above entry, but not tighter than min distance
+        stopLoss = Math.min(datasetHigh, entry + Math.max(topCluster.dynamicClusterSize, minPipDistance) + volatilityBuffer);
 
-    // Take-profit: below entry, at least multiple of risk, capped at session low or median
-    const risk = stopLoss - entry;
-    takeProfit = Math.max(sessionLow, entry - (risk * targetMultiple));
-    takeProfit = Math.min(takeProfit, entry - minPipDistance);
-}
+        // Take-profit: below entry, at least multiple of risk, capped at dataset low or median
+        const risk = stopLoss - entry;
+        takeProfit = Math.max(datasetLow, entry - (risk * targetMultiple));
+        takeProfit = Math.min(takeProfit, entry - minPipDistance);
+    }
 
-// Recalculate risk/reward
-const riskPips = parseFloat(formatPips(entry, stopLoss));
-const rewardPips = parseFloat(formatPips(takeProfit, entry));
-const riskReward = rewardPips / riskPips;
-
-
-
+    // Recalculate risk/reward
+    const riskPips = parseFloat(formatPips(entry, stopLoss));
+    const rewardPips = parseFloat(formatPips(takeProfit, entry));
+    const riskReward = rewardPips / riskPips;
 
     // Check minimum risk:reward and confidence
     const meetsRiskReward = riskReward >= settings.minRiskReward;
@@ -930,7 +895,7 @@ const riskReward = rewardPips / riskPips;
         <div class="data-row"><span>Recent Hits:</span><span class="neutral">${topCluster.recentHits}</span></div>
         <div class="data-row"><span>Success Rate:</span><span class="badge ${topCluster.upPct > 50 ? 'badge-success' : 'badge-danger'}">${topCluster.upPct.toFixed(0)}%</span></div>
         <div class="data-row"><span>Volatility:</span><span>${topCluster.volatility.toFixed(2)}%</span></div>
-        <div class="data-row"><span>Sessions:</span><span class="neutral">${topCluster.sessionCount}</span></div>
+        <div class="data-row"><span>Days:</span><span class="neutral">${topCluster.dayCount}</span></div>
         <div class="data-row"><span>Patterns:</span><span class="badge badge-warning">${topCluster.candlestickPatterns.length}</span></div>
         <div class="data-row"><span>Dynamic Size:</span><span>${(topCluster.dynamicClusterSize/settings.pipValue).toFixed(1)} pips</span></div>
     `;
@@ -962,7 +927,7 @@ const riskReward = rewardPips / riskPips;
                 <th>Volatility</th>
                 <th>Confidence</th>
                 <th>R:R</th>
-                <th>Sessions</th>
+                <th>Days</th>
                 <th>Patterns</th>
                 <th>Persistence</th>
             </tr>
@@ -985,7 +950,7 @@ const riskReward = rewardPips / riskPips;
             <td>${cluster.volatility.toFixed(2)}%</td>
             <td><span class="badge ${cluster.confidence > 70 ? 'badge-success' : cluster.confidence > 50 ? 'badge-warning' : 'badge-danger'}">${cluster.confidence.toFixed(0)}%</span></td>
             <td><span class="badge ${cluster.riskReward >= 2 ? 'badge-success' : 'badge-warning'}">1:${cluster.riskReward.toFixed(2)}</span></td>
-            <td class="neutral">${cluster.sessionCount}</td>
+            <td class="neutral">${cluster.dayCount}</td>
             <td><span class="badge badge-warning">${cluster.candlestickPatterns.length}</span></td>
             <td>${(cluster.persistence * 100).toFixed(0)}%</td>
         </tr>`;
@@ -997,7 +962,7 @@ const riskReward = rewardPips / riskPips;
     tableHtml += '• <strong>Dynamic Clustering:</strong> Cluster size auto-adjusted based on recent volatility<br>';
     tableHtml += '• <strong>Exponential Weighting:</strong> Recent candles weighted more heavily<br>';
     tableHtml += '• <strong>Pattern Recognition:</strong> Pin bars, engulfing, inside bars, doji patterns detected<br>';
-    tableHtml += '• <strong>Session Analysis:</strong> Multi-session validation for stronger signals<br>';
+    tableHtml += '• <strong>Full Dataset Analysis:</strong> Complete CSV data processed without time restrictions<br>';
     tableHtml += '• <strong>Smart Risk Management:</strong> Volatility-adjusted stops with minimum R:R requirements<br>';
     tableHtml += '• <strong>Confidence Scoring:</strong> Frequency + Consistency + Recency + Persistence + Patterns - Volatility Penalty';
     tableHtml += '</div>';
@@ -1012,10 +977,10 @@ const riskReward = rewardPips / riskPips;
 function downloadCSV() {
     if (analysis.length === 0) return;
 
-    let csv = 'Rank,Pair,Cluster,TotalHits,RecentHits,SuccessRate,Volatility,ProbableHigh,ProbableLow,Median,Confidence,RiskReward,Sessions,Patterns,Persistence,DynamicSize\n';
+    let csv = 'Rank,Pair,Cluster,TotalHits,RecentHits,SuccessRate,Volatility,ProbableHigh,ProbableLow,Median,Confidence,RiskReward,Days,Patterns,Persistence,DynamicSize\n';
     
     analysis.forEach((c, i) => {
-        csv += `${i+1},${settings.forexPair},${c.cluster.toFixed(5)},${c.count},${c.recentHits},${c.upPct.toFixed(1)}%,${c.volatility.toFixed(2)}%,${c.probableHigh.toFixed(5)},${c.probableLow.toFixed(5)},${c.median.toFixed(5)},${c.confidence.toFixed(0)}%,${c.riskReward.toFixed(2)},${c.sessionCount},${c.candlestickPatterns.length},${(c.persistence*100).toFixed(0)}%,${(c.dynamicClusterSize/settings.pipValue).toFixed(1)}\n`;
+        csv += `${i+1},${settings.forexPair},${c.cluster.toFixed(5)},${c.count},${c.recentHits},${c.upPct.toFixed(1)}%,${c.volatility.toFixed(2)}%,${c.probableHigh.toFixed(5)},${c.probableLow.toFixed(5)},${c.median.toFixed(5)},${c.confidence.toFixed(0)}%,${c.riskReward.toFixed(2)},${c.dayCount},${c.candlestickPatterns.length},${(c.persistence*100).toFixed(0)}%,${(c.dynamicClusterSize/settings.pipValue).toFixed(1)}\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
